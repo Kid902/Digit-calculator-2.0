@@ -5,6 +5,9 @@ Retro Digit Calculator v2.0
 
 A retro-styled Java Swing desktop application for digit conversions, mathematical calculations, and number analysis. The project is designed with a game-like UI for a fun and interactive user experience while performing number system conversions and calculations.
 
+<img width="783" height="686" alt="Screenshot 2025-09-26 151345" src="https://github.com/user-attachments/assets/d09524cb-3a29-46d4-bc99-40797befa5cd" />
+
+
 
 ## 🛠️ Features
 
