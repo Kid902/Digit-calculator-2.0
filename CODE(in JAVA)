@@ -1,0 +1,677 @@
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.border.*;
+
+public class RetroDigitCalculator extends JFrame {
+    private JTextField inputField;
+    private JTextField outputField;
+    private JComboBox<String> fromBase, toBase;
+    private JTextArea processArea;
+    private JCheckBox showProcessCheckBox;
+    private JLabel statusLabel;
+    
+    // Color scheme for retro look
+    private final Color RETRO_BLUE = new Color(0, 128, 128);
+    private final Color RETRO_GREEN = new Color(0, 128, 0);
+    private final Color RETRO_RED = new Color(128, 0, 0);
+    private final Color RETRO_PURPLE = new Color(128, 0, 128);
+    private final Color RETRO_YELLOW = new Color(255, 255, 0);
+    private final Color RETRO_GRAY = new Color(192, 192, 192);
+    private final Color RETRO_DARK_GRAY = new Color(128, 128, 128);
+    
+    private final String[] bases = {"Binary", "Octal", "Decimal", "Hexadecimal"};
+    private final String[] operations = {"+", "-", "*", "/", "%", "^"};
+    
+    public RetroDigitCalculator() {
+        initializeGUI();
+    }
+    
+    private void initializeGUI() {
+        setTitle("🔢 Retro Digit Calculator v1.0");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        
+        // Custom retro styling - no need for look and feel changes
+        // The retro appearance is achieved through custom colors, borders, and fonts
+        
+        // Create custom borders
+        Border raisedBorder = BorderFactory.createRaisedBevelBorder();
+        Border colorBorder = new LineBorder(RETRO_BLUE, 2);
+        Border compoundBorder = new CompoundBorder(colorBorder, raisedBorder);
+        
+        // Main panel with gradient background
+        JPanel mainPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g;
+                GradientPaint gradient = new GradientPaint(
+                    0, 0, RETRO_GRAY,
+                    0, getHeight(), Color.WHITE
+                );
+                g2d.setPaint(gradient);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(compoundBorder);
+        
+        // Title panel
+        JPanel titlePanel = createTitlePanel();
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
+        
+        // Center panel with tabs
+        JTabbedPane tabbedPane = createTabbedPane();
+        mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        
+        // Status panel
+        JPanel statusPanel = createStatusPanel();
+        mainPanel.add(statusPanel, BorderLayout.SOUTH);
+        
+        add(mainPanel);
+        
+        setSize(800, 700);
+        setLocationRelativeTo(null);
+        setResizable(true);
+    }
+    
+    private JPanel createTitlePanel() {
+        JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JLabel titleLabel = new JLabel("🔢 RETRO DIGIT CALCULATOR", JLabel.CENTER);
+        titleLabel.setFont(new Font("MS Sans Serif", Font.BOLD, 18));
+        titleLabel.setForeground(RETRO_BLUE);
+        
+        titlePanel.add(titleLabel);
+        return titlePanel;
+    }
+    
+    private JTabbedPane createTabbedPane() {
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("MS Sans Serif", Font.BOLD, 12));
+        tabbedPane.setBackground(RETRO_GRAY);
+        
+        // Base Conversion Tab
+        tabbedPane.addTab("Base Conversion", createBaseConversionPanel());
+        
+        // Calculator Tab
+        tabbedPane.addTab("Calculator", createCalculatorPanel());
+        
+        // Number Analysis Tab
+        tabbedPane.addTab("Number Analysis", createNumberAnalysisPanel());
+        
+        return tabbedPane;
+    }
+    
+    private JPanel createBaseConversionPanel() {
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // Input section
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(createStyledLabel("From:", RETRO_BLUE), gbc);
+        
+        gbc.gridx = 1;
+        fromBase = new JComboBox<>(bases);
+        fromBase.setFont(new Font("MS Sans Serif", Font.PLAIN, 12));
+        panel.add(fromBase, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(createStyledLabel("Input Number:", RETRO_GREEN), gbc);
+        
+        gbc.gridx = 1; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.HORIZONTAL;
+        inputField = new JTextField(20);
+        inputField.setFont(new Font("Courier New", Font.PLAIN, 14));
+        inputField.setBorder(BorderFactory.createLoweredBevelBorder());
+        panel.add(inputField, gbc);
+        
+        // Output section
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1;
+        panel.add(createStyledLabel("To:", RETRO_RED), gbc);
+        
+        gbc.gridx = 1;
+        toBase = new JComboBox<>(bases);
+        toBase.setFont(new Font("MS Sans Serif", Font.PLAIN, 12));
+        panel.add(toBase, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(createStyledLabel("Result:", RETRO_PURPLE), gbc);
+        
+        gbc.gridx = 1; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.HORIZONTAL;
+        outputField = new JTextField(20);
+        outputField.setFont(new Font("Courier New", Font.BOLD, 14));
+        outputField.setEditable(false);
+        outputField.setBorder(BorderFactory.createLoweredBevelBorder());
+        outputField.setBackground(RETRO_YELLOW);
+        panel.add(outputField, gbc);
+        
+        // Convert button
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 3; gbc.fill = GridBagConstraints.NONE;
+        JButton convertButton = createStyledButton("🔄 CONVERT", RETRO_BLUE);
+        convertButton.addActionListener(e -> performConversion());
+        panel.add(convertButton, gbc);
+        
+        // Show process checkbox
+        gbc.gridy = 5;
+        showProcessCheckBox = new JCheckBox("Show conversion process");
+        showProcessCheckBox.setOpaque(false);
+        showProcessCheckBox.setFont(new Font("MS Sans Serif", Font.PLAIN, 11));
+        panel.add(showProcessCheckBox, gbc);
+        
+        // Process area
+        gbc.gridy = 6; gbc.fill = GridBagConstraints.BOTH; gbc.weightx = 1.0; gbc.weighty = 1.0;
+        processArea = new JTextArea(10, 50);
+        processArea.setFont(new Font("Courier New", Font.PLAIN, 11));
+        processArea.setEditable(false);
+        processArea.setBackground(Color.WHITE);
+        JScrollPane scrollPane = new JScrollPane(processArea);
+        scrollPane.setBorder(BorderFactory.createLoweredBevelBorder());
+        panel.add(scrollPane, gbc);
+        
+        return panel;
+    }
+    
+    private JPanel createCalculatorPanel() {
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // Calculator input fields
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(createStyledLabel("Number 1:", RETRO_BLUE), gbc);
+        
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        JTextField num1Field = new JTextField(15);
+        num1Field.setFont(new Font("Courier New", Font.PLAIN, 14));
+        panel.add(num1Field, gbc);
+        
+        gbc.gridx = 2;
+        JComboBox<String> base1 = new JComboBox<>(bases);
+        panel.add(base1, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
+        panel.add(createStyledLabel("Operation:", RETRO_GREEN), gbc);
+        
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        JComboBox<String> operationBox = new JComboBox<>(operations);
+        operationBox.setFont(new Font("MS Sans Serif", Font.BOLD, 14));
+        panel.add(operationBox, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
+        panel.add(createStyledLabel("Number 2:", RETRO_RED), gbc);
+        
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        JTextField num2Field = new JTextField(15);
+        num2Field.setFont(new Font("Courier New", Font.PLAIN, 14));
+        panel.add(num2Field, gbc);
+        
+        gbc.gridx = 2;
+        JComboBox<String> base2 = new JComboBox<>(bases);
+        panel.add(base2, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 3; gbc.fill = GridBagConstraints.NONE;
+        panel.add(createStyledLabel("Result Base:", RETRO_PURPLE), gbc);
+        
+        gbc.gridx = 1;
+        JComboBox<String> resultBase = new JComboBox<>(bases);
+        panel.add(resultBase, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 4;
+        panel.add(createStyledLabel("Result:", RETRO_PURPLE), gbc);
+        
+        gbc.gridx = 1; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.HORIZONTAL;
+        JTextField calcResultField = new JTextField(20);
+        calcResultField.setFont(new Font("Courier New", Font.BOLD, 14));
+        calcResultField.setEditable(false);
+        calcResultField.setBackground(RETRO_YELLOW);
+        panel.add(calcResultField, gbc);
+        
+        // Calculate button
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 3; gbc.fill = GridBagConstraints.NONE;
+        JButton calculateButton = createStyledButton("🧮 CALCULATE", RETRO_GREEN);
+        calculateButton.addActionListener(e -> performCalculation(num1Field, base1, operationBox, 
+            num2Field, base2, resultBase, calcResultField));
+        panel.add(calculateButton, gbc);
+        
+        // Process area for calculator
+        gbc.gridy = 6; gbc.fill = GridBagConstraints.BOTH; gbc.weightx = 1.0; gbc.weighty = 1.0;
+        JTextArea calcProcessArea = new JTextArea(8, 50);
+        calcProcessArea.setFont(new Font("Courier New", Font.PLAIN, 11));
+        calcProcessArea.setEditable(false);
+        calcProcessArea.setBackground(Color.WHITE);
+        JScrollPane calcScrollPane = new JScrollPane(calcProcessArea);
+        panel.add(calcScrollPane, gbc);
+        
+        return panel;
+    }
+    
+    private JPanel createNumberAnalysisPanel() {
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(createStyledLabel("Enter Number:", RETRO_BLUE), gbc);
+        
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        JTextField analysisField = new JTextField(20);
+        analysisField.setFont(new Font("Courier New", Font.PLAIN, 14));
+        panel.add(analysisField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
+        JButton analyzeButton = createStyledButton("🔍 ANALYZE NUMBER", RETRO_PURPLE);
+        panel.add(analyzeButton, gbc);
+        
+        gbc.gridy = 2; gbc.fill = GridBagConstraints.BOTH; gbc.weightx = 1.0; gbc.weighty = 1.0;
+        JTextArea analysisResultArea = new JTextArea(15, 50);
+        analysisResultArea.setFont(new Font("Courier New", Font.PLAIN, 12));
+        analysisResultArea.setEditable(false);
+        analysisResultArea.setBackground(Color.WHITE);
+        JScrollPane analysisScrollPane = new JScrollPane(analysisResultArea);
+        panel.add(analysisScrollPane, gbc);
+        
+        analyzeButton.addActionListener(e -> analyzeNumber(analysisField.getText(), analysisResultArea));
+        
+        return panel;
+    }
+    
+    private JPanel createStatusPanel() {
+        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        statusPanel.setOpaque(false);
+        statusPanel.setBorder(BorderFactory.createLoweredBevelBorder());
+        
+        statusLabel = new JLabel("Ready");
+        statusLabel.setFont(new Font("MS Sans Serif", Font.PLAIN, 11));
+        statusLabel.setForeground(RETRO_DARK_GRAY);
+        statusPanel.add(statusLabel);
+        
+        return statusPanel;
+    }
+    
+    private JLabel createStyledLabel(String text, Color color) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("MS Sans Serif", Font.BOLD, 12));
+        label.setForeground(color);
+        return label;
+    }
+    
+    private JButton createStyledButton(String text, Color color) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("MS Sans Serif", Font.BOLD, 12));
+        button.setBackground(color);
+        button.setForeground(Color.WHITE);
+        button.setBorder(BorderFactory.createRaisedBevelBorder());
+        button.setPreferredSize(new Dimension(150, 30));
+        
+        // Add hover effect
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(color.brighter());
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(color);
+            }
+        });
+        
+        return button;
+    }
+    
+    private void performConversion() {
+        try {
+            String input = inputField.getText().trim();
+            if (input.isEmpty()) {
+                statusLabel.setText("Please enter a number to convert");
+                return;
+            }
+            
+            String fromBaseStr = (String) fromBase.getSelectedItem();
+            String toBaseStr = (String) toBase.getSelectedItem();
+            
+            int fromBaseNum = getBaseNumber(fromBaseStr);
+            int toBaseNum = getBaseNumber(toBaseStr);
+            
+            // Convert to decimal first
+            long decimalValue = Long.parseLong(input, fromBaseNum);
+            
+            // Convert to target base
+            String result = Long.toString(decimalValue, toBaseNum).toUpperCase();
+            outputField.setText(result);
+            
+            if (showProcessCheckBox.isSelected()) {
+                showConversionProcess(input, fromBaseStr, toBaseStr, decimalValue, result);
+            } else {
+                processArea.setText("");
+            }
+            
+            statusLabel.setText("Conversion completed successfully");
+            
+        } catch (NumberFormatException e) {
+            outputField.setText("Invalid Input");
+            statusLabel.setText("Error: Invalid number format for selected base");
+        } catch (Exception e) {
+            outputField.setText("Error");
+            statusLabel.setText("Error: " + e.getMessage());
+        }
+    }
+    
+    private void showConversionProcess(String input, String fromBase, String toBase, 
+                                     long decimalValue, String result) {
+        StringBuilder process = new StringBuilder();
+        process.append("CONVERSION PROCESS:\n");
+        process.append("==================\n\n");
+        
+        process.append("Step 1: Convert ").append(fromBase).append(" to Decimal\n");
+        process.append("Input: ").append(input).append(" (").append(fromBase).append(")\n");
+        
+        if (!fromBase.equals("Decimal")) {
+            process.append("Decimal equivalent: ").append(decimalValue).append("\n\n");
+            
+            // Show detailed conversion for binary/octal/hex to decimal
+            if (fromBase.equals("Binary")) {
+                showBinaryToDecimalProcess(input, process);
+            } else if (fromBase.equals("Octal")) {
+                showOctalToDecimalProcess(input, process);
+            } else if (fromBase.equals("Hexadecimal")) {
+                showHexToDecimalProcess(input, process);
+            }
+        }
+        
+        process.append("Step 2: Convert Decimal to ").append(toBase).append("\n");
+        process.append("Decimal: ").append(decimalValue).append("\n");
+        process.append("Result: ").append(result).append(" (").append(toBase).append(")\n\n");
+        
+        if (!toBase.equals("Decimal")) {
+            showDecimalToBaseProcess(decimalValue, getBaseNumber(toBase), process);
+        }
+        
+        processArea.setText(process.toString());
+    }
+    
+    private void showBinaryToDecimalProcess(String binary, StringBuilder process) {
+        process.append("Binary to Decimal conversion:\n");
+        for (int i = 0; i < binary.length(); i++) {
+            int position = binary.length() - 1 - i;
+            char bit = binary.charAt(i);
+            int value = Character.getNumericValue(bit);
+            process.append(bit).append(" × 2^").append(position).append(" = ")
+                   .append(value * Math.pow(2, position)).append("\n");
+        }
+        process.append("\n");
+    }
+    
+    private void showOctalToDecimalProcess(String octal, StringBuilder process) {
+        process.append("Octal to Decimal conversion:\n");
+        for (int i = 0; i < octal.length(); i++) {
+            int position = octal.length() - 1 - i;
+            char digit = octal.charAt(i);
+            int value = Character.getNumericValue(digit);
+            process.append(digit).append(" × 8^").append(position).append(" = ")
+                   .append(value * Math.pow(8, position)).append("\n");
+        }
+        process.append("\n");
+    }
+    
+    private void showHexToDecimalProcess(String hex, StringBuilder process) {
+        process.append("Hexadecimal to Decimal conversion:\n");
+        for (int i = 0; i < hex.length(); i++) {
+            int position = hex.length() - 1 - i;
+            char digit = hex.charAt(i);
+            int value = Character.getNumericValue(digit);
+            process.append(digit).append(" × 16^").append(position).append(" = ")
+                   .append(value * Math.pow(16, position)).append("\n");
+        }
+        process.append("\n");
+    }
+    
+    private void showDecimalToBaseProcess(long decimal, int base, StringBuilder process) {
+        process.append("Decimal to Base ").append(base).append(" conversion:\n");
+        process.append("Repeatedly divide by ").append(base).append(" and collect remainders:\n");
+        
+        long temp = decimal;
+        StringBuilder steps = new StringBuilder();
+        while (temp > 0) {
+            long remainder = temp % base;
+            temp = temp / base;
+            steps.insert(0, remainder + " ");
+            process.append(temp).append(" remainder ").append(remainder).append("\n");
+        }
+        process.append("Read remainders from bottom to top: ").append(steps.toString().trim()).append("\n\n");
+    }
+    
+    private void performCalculation(JTextField num1Field, JComboBox<String> base1,
+                                  JComboBox<String> operationBox, JTextField num2Field,
+                                  JComboBox<String> base2, JComboBox<String> resultBase,
+                                  JTextField calcResultField) {
+        try {
+            String num1Str = num1Field.getText().trim();
+            String num2Str = num2Field.getText().trim();
+            String operation = (String) operationBox.getSelectedItem();
+            
+            if (num1Str.isEmpty() || num2Str.isEmpty()) {
+                statusLabel.setText("Please enter both numbers");
+                return;
+            }
+            
+            int base1Num = getBaseNumber((String) base1.getSelectedItem());
+            int base2Num = getBaseNumber((String) base2.getSelectedItem());
+            int resultBaseNum = getBaseNumber((String) resultBase.getSelectedItem());
+            
+            long num1 = Long.parseLong(num1Str, base1Num);
+            long num2 = Long.parseLong(num2Str, base2Num);
+            
+            long result = performOperation(num1, num2, operation);
+            String resultStr = Long.toString(result, resultBaseNum).toUpperCase();
+            
+            calcResultField.setText(resultStr);
+            statusLabel.setText("Calculation completed successfully");
+            
+        } catch (Exception e) {
+            calcResultField.setText("Error");
+            statusLabel.setText("Error: " + e.getMessage());
+        }
+    }
+    
+    private long performOperation(long num1, long num2, String operation) {
+        switch (operation) {
+            case "+": return num1 + num2;
+            case "-": return num1 - num2;
+            case "*": return num1 * num2;
+            case "/": 
+                if (num2 == 0) throw new ArithmeticException("Division by zero");
+                return num1 / num2;
+            case "%": 
+                if (num2 == 0) throw new ArithmeticException("Division by zero");
+                return num1 % num2;
+            case "^": return (long) Math.pow(num1, num2);
+            default: throw new IllegalArgumentException("Unknown operation: " + operation);
+        }
+    }
+    
+    private void analyzeNumber(String input, JTextArea resultArea) {
+        if (input.trim().isEmpty()) {
+            resultArea.setText("Please enter a number to analyze.");
+            return;
+        }
+        
+        StringBuilder analysis = new StringBuilder();
+        analysis.append("NUMBER ANALYSIS REPORT\n");
+        analysis.append("======================\n\n");
+        
+        try {
+            double number = Double.parseDouble(input);
+            
+            analysis.append("Input: ").append(input).append("\n\n");
+            
+            // Basic properties
+            analysis.append("BASIC PROPERTIES:\n");
+            analysis.append("-----------------\n");
+            analysis.append("• Positive: ").append(number > 0 ? "Yes" : "No").append("\n");
+            analysis.append("• Negative: ").append(number < 0 ? "Yes" : "No").append("\n");
+            analysis.append("• Zero: ").append(number == 0 ? "Yes" : "No").append("\n");
+            analysis.append("• Even: ").append(number % 2 == 0 ? "Yes" : "No").append("\n");
+            analysis.append("• Odd: ").append(number % 2 != 0 ? "Yes" : "No").append("\n\n");
+            
+            // Rational/Irrational analysis
+            analysis.append("RATIONAL/IRRATIONAL ANALYSIS:\n");
+            analysis.append("-----------------------------\n");
+            
+            if (isInteger(number)) {
+                analysis.append("• Type: INTEGER (Rational)\n");
+                analysis.append("• Explanation: All integers are rational numbers\n");
+                analysis.append("• Fraction form: ").append((long)number).append("/1\n\n");
+                
+                // Convert to irrational approximation
+                analysis.append("IRRATIONAL APPROXIMATIONS:\n");
+                analysis.append("• √").append((long)(number * number)).append(" = ").append(number).append("\n");
+                analysis.append("• ").append(number).append("π/π = ").append(number).append("\n");
+                analysis.append("• ").append(number).append("e/e = ").append(number).append("\n\n");
+                
+            } else if (hasRepeatingDecimal(input)) {
+                analysis.append("• Type: RATIONAL (Repeating decimal)\n");
+                analysis.append("• Explanation: Repeating decimals are rational\n");
+                String fraction = decimalToFraction(number);
+                analysis.append("• Fraction form: ").append(fraction).append("\n\n");
+                
+            } else if (hasTerminatingDecimal(input)) {
+                analysis.append("• Type: RATIONAL (Terminating decimal)\n");
+                analysis.append("• Explanation: Terminating decimals are rational\n");
+                String fraction = decimalToFraction(number);
+                analysis.append("• Fraction form: ").append(fraction).append("\n\n");
+                
+            } else {
+                analysis.append("• Type: POTENTIALLY IRRATIONAL\n");
+                analysis.append("• Explanation: Non-repeating, non-terminating decimal\n");
+                analysis.append("• Note: Limited precision may not show true nature\n\n");
+                
+                // Convert to rational approximation
+                analysis.append("RATIONAL APPROXIMATIONS:\n");
+                String fraction = decimalToFraction(number);
+                analysis.append("• Fraction form: ").append(fraction).append("\n");
+                analysis.append("• Decimal approximation: ").append(String.format("%.10f", number)).append("\n\n");
+            }
+            
+            // Special number classifications
+            analysis.append("SPECIAL CLASSIFICATIONS:\n");
+            analysis.append("------------------------\n");
+            
+            if (isPrime((long)Math.abs(number)) && isInteger(number)) {
+                analysis.append("• Prime number: Yes\n");
+            }
+            
+            if (isPerfectSquare(number)) {
+                analysis.append("• Perfect square: Yes (√").append(number).append(" = ")
+                         .append(Math.sqrt(number)).append(")\n");
+            }
+            
+            if (isFibonacci((long)Math.abs(number)) && isInteger(number)) {
+                analysis.append("• Fibonacci number: Yes\n");
+            }
+            
+            // Mathematical representations
+            analysis.append("\nMATHEMATICAL REPRESENTATIONS:\n");
+            analysis.append("-----------------------------\n");
+            
+            if (isInteger(number)) {
+                long n = (long) number;
+                analysis.append("• Binary: ").append(Long.toBinaryString(n)).append("\n");
+                analysis.append("• Octal: ").append(Long.toOctalString(n)).append("\n");
+                analysis.append("• Hexadecimal: ").append(Long.toHexString(n).toUpperCase()).append("\n");
+            }
+            
+            analysis.append("• Scientific notation: ").append(String.format("%.3e", number)).append("\n");
+            analysis.append("• Absolute value: ").append(Math.abs(number)).append("\n");
+            
+            resultArea.setText(analysis.toString());
+            statusLabel.setText("Number analysis completed");
+            
+        } catch (NumberFormatException e) {
+            resultArea.setText("Error: Invalid number format. Please enter a valid number.");
+            statusLabel.setText("Error: Invalid input");
+        }
+    }
+    
+    private boolean isInteger(double number) {
+        return number == Math.floor(number) && !Double.isInfinite(number);
+    }
+    
+    private boolean hasRepeatingDecimal(String input) {
+        // Simple heuristic - look for patterns in decimal part
+        if (!input.contains(".")) return false;
+        String decimal = input.split("\\.")[1];
+        return decimal.length() > 6; // Assume long decimals might be repeating
+    }
+    
+    private boolean hasTerminatingDecimal(String input) {
+        return input.contains(".") && input.split("\\.")[1].length() <= 6;
+    }
+    
+    private String decimalToFraction(double decimal) {
+        // Simple fraction approximation
+        double tolerance = 1.0E-6;
+        double h1=1; double h2=0; double k1=0; double k2=1;
+        double b = decimal;
+        do {
+            double a = Math.floor(b);
+            double aux = h1; h1 = a*h1+h2; h2 = aux;
+            aux = k1; k1 = a*k1+k2; k2 = aux;
+            b = 1/(b-a);
+        } while (Math.abs(decimal-h1/k1) > decimal*tolerance);
+        
+        return (long)h1 + "/" + (long)k1;
+    }
+    
+    private boolean isPrime(long n) {
+        if (n < 2) return false;
+        if (n == 2) return true;
+        if (n % 2 == 0) return false;
+        
+        for (long i = 3; i * i <= n; i += 2) {
+            if (n % i == 0) return false;
+        }
+        return true;
+    }
+    
+    private boolean isPerfectSquare(double n) {
+        if (n < 0) return false;
+        double sqrt = Math.sqrt(n);
+        return sqrt == Math.floor(sqrt);
+    }
+    
+    private boolean isFibonacci(long n) {
+        // Check if n is a Fibonacci number using Binet's formula property
+        return isPerfectSquare(5 * n * n + 4) || isPerfectSquare(5 * n * n - 4);
+    }
+    
+    private int getBaseNumber(String baseStr) {
+        switch (baseStr) {
+            case "Binary": return 2;
+            case "Octal": return 8;
+            case "Decimal": return 10;
+            case "Hexadecimal": return 16;
+            default: return 10;
+        }
+    }
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            // Customize UI defaults for retro look
+            UIManager.put("TabbedPane.selected", new Color(192, 192, 192));
+            UIManager.put("TabbedPane.background", new Color(192, 192, 192));
+            UIManager.put("Panel.background", new Color(240, 240, 240));
+            UIManager.put("TextField.background", Color.WHITE);
+            UIManager.put("TextArea.background", Color.WHITE);
+            UIManager.put("ComboBox.background", Color.WHITE);
+            
+            RetroDigitCalculator calculator = new RetroDigitCalculator();
+            calculator.setVisible(true);
+        });
+    }
+}
